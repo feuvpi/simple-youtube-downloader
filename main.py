@@ -1,7 +1,9 @@
 import customtkinter as tk
+from tkinter import filedialog
 import pytube
 from pytube import YouTube
 from sys import argv
+from urllib.error import URLError
 tk.set_appearance_mode("dark")
 tk.set_default_color_theme("dark-blue")
 
@@ -9,8 +11,16 @@ app = tk.CTk()
 app.geometry("500x350")
 app.title("Simple YouTube Downloader")
 
+# adicionar tratamento de erros
+# adicionar progress bar
+# adicionar dialog para escolhar de local de salvamento
+# adicionar novas telas para cada etapa
+
 
 class YoutubeDownloader(tk.CTk):
+
+    # declare global variables
+    yt = ''
 
     def __init__(self):
         super().__init__()
@@ -25,7 +35,7 @@ class YoutubeDownloader(tk.CTk):
     def create_widgets(self):
 
         # create label for the url
-        url_label = tk.CTkLabel(master=self, pady=2, padx=2, text="Youtube Downloader", font=("Roboto", 24))
+        url_label = tk.CTkLabel(master=self, pady=10, padx=2, text="Youtube Downloader", font=("Roboto", 24))
         url_label.pack()
 
         # create text field for input link
@@ -36,6 +46,7 @@ class YoutubeDownloader(tk.CTk):
         # create label for file type
         self.type_label = tk.CTkLabel(master=self, pady=2, padx=2, text="Choose file type:", font=("Roboto", 14))
         self.type_label.pack(pady=2, padx=2)
+
 
         # create combobox for type
 
@@ -57,31 +68,41 @@ class YoutubeDownloader(tk.CTk):
 
     def combobox_fill(self, event):
         url = self.link_field.get()
-        yt = YouTube(url)
+        self.yt = YouTube(url)
         if (self.type_combobox.get() == "MP3"):
             try:
-                self.available_streams = yt.streams.filter(only_audio=True, file_extension='mp4')
+                self.available_streams = self.yt.streams.filter(only_audio=True, file_extension='mp3')
+                comboValues = [i.abr for i in self.available_streams.fmt_streams]
             except URLError as e:
                 print(e)
-
         else:
             try:
-                self.available_streams = yt.streams.filter(file_extension='mp4')
-                teste = "teste"
+                self.available_streams = self.yt.streams.filter(file_extension='mp4')
             except URLError as e:
                 print(e)
-        self.quality_combobox.configure(values=[i.resolution for i in self.available_streams.fmt_streams])
+        #  comboValues = [i.abr for i in self.available_streams.fmt_streams]
+        comboValues = [i.resolution for i in self.available_streams.fmt_streams]
+        comboValues_filtered = list(set(i for i in comboValues if i is not None))
+        teste = 1
+        self.quality_combobox.configure(values=comboValues_filtered)
 
 
     def download(self):
-        url = self.link_field.get()
-        yt = YouTube(url)
+        if(self.type_combobox.get() == "MP3"):
+            save_path = filedialog.asksaveasfilename(
+                defaultextension="mp3")
+        else:
+            save_path = filedialog.asksaveasfilename(
+                defaultextension="mp4")
+        if self.yt == '':
+            url = self.link_field.get()
+            yt = YouTube(url)
         quality = self.quality_combobox.get()
         if(self.type_combobox.get() == "MP3"):
-            stream = yt.streams.filter(only_audio=True, file_extension='mp3', resolution=quality).first()
+            stream = self.yt.streams.filter(only_audio=True, file_extension='mp3', abr=quality).first()
         else:
-            stream = yt.streams.filter(file_extension='mp4', resolution=quality).first()
-        stream.download()
+            stream = self.yt.streams.filter(file_extension='mp4', resolution=quality).first()
+        stream.download(save_path)
 
 
 app = YoutubeDownloader()
