@@ -14,6 +14,8 @@ app = tk.CTk()
 app.geometry("500x350")
 app.title("Simple YouTube Downloader")
 
+widgets = []
+
 # adicionar tratamento de erros
 # adicionar progress bar
 # adicionar dialog para escolhar de local de salvamento
@@ -53,40 +55,52 @@ class YoutubeDownloader(tk.CTk):
         url_label = tk.CTkLabel(master=self, pady=10, padx=2, text="Youtube Downloader", font=("Roboto", 24))
         url_label.pack(pady=(10), padx=2)
 
+
         # create text field for input link
         self.link_field = tk.CTkEntry(master=self, width=400, placeholder_text="Enter video url:")
         self.link_field.pack(pady=2, padx=2)
         self.link_field.bind("<KeyRelease>", self.combobox_fill)
+        widgets.append(self.link_field)
 
         # create label for file type
         self.type_label = tk.CTkLabel(master=self, width=400, text="Choose file type:", font=("Roboto", 14), anchor=tk.W)
         self.type_label.pack(pady=(10, 2), padx=2)
+        widgets.append(self.type_label)
 
 
         # create combobox for type
 
         self.type_combobox = tk.CTkComboBox(master=self, width=400, values=["MP4", "MP3"])
         self.type_combobox.pack(pady=2, padx=2)
+        widgets.append(self.type_combobox)
 
         # create label for quality
         self.quality_label = tk.CTkLabel(master=self, width=400, text="Select quality:", font=("Roboto", 14), anchor=tk.W)
         self.quality_label.pack(pady=(10,2), padx=10)
+        widgets.append(self.quality_label)
 
         # create combobox for quality
 
         self.quality_combobox = tk.CTkComboBox(master=self, width=400, values=['Choose file type first'])
         self.quality_combobox.pack(pady=2, padx=2)
+        widgets.append(self.quality_combobox)
 
         # adding download button
         button = tk.CTkButton(master=self, width=400, text="Download", command=self.download)
         button.pack(pady=(40,10), padx=10)
+        widgets.append(button)
 
         # add a progress bar
-        progress_bar = tkinter.ttk.Progressbar(self, orient='horizontal', length=200, mode='determinate')
-        progress_bar.pack()
+        self.progress_bar = tkinter.ttk.Progressbar(self, orient='horizontal', length=200, mode='determinate')
+
 
     def combobox_fill(self, event):
         if len(event.widget.get()) > 32 and self.is_youtube_link(event.widget.get()):
+
+            # for widget in widgets:
+            #     widget.pack_forget()
+            #
+            # self.progress_bar.pack()
             try:
                 url = self.link_field.get()
                 self.yt = YouTube(url)
@@ -111,6 +125,12 @@ class YoutubeDownloader(tk.CTk):
 
 
     def download(self):
+
+        for widget in widgets:
+            widget.pack_forget()
+
+        self.progress_bar.pack()
+
         # select save path
         if self.type_combobox.get() == "MP3":
             try:
@@ -137,6 +157,9 @@ class YoutubeDownloader(tk.CTk):
             stream.download(self.parts[0], self.parts[1])
         except BaseException as er:
             print("Exception realizar download.", er)
+        self.progress_bar.pack_forget()
+        for widget in widgets:
+            widget.pack()
         ttk.messagebox.showinfo("Download complete", "The video has been downloaded successfully!")
 
 
