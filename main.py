@@ -1,3 +1,5 @@
+import tkinter as ttk
+import tkinter.ttk
 import customtkinter as tk
 from tkinter import filedialog
 import pytube
@@ -79,10 +81,17 @@ class YoutubeDownloader(tk.CTk):
         button = tk.CTkButton(master=self, width=400, text="Download", command=self.download)
         button.pack(pady=(40,10), padx=10)
 
+        # add a progress bar
+        progress_bar = tkinter.ttk.Progressbar(self, orient='horizontal', length=200, mode='determinate')
+        progress_bar.pack()
+
     def combobox_fill(self, event):
         if len(event.widget.get()) > 32 and self.is_youtube_link(event.widget.get()):
-            url = self.link_field.get()
-            self.yt = YouTube(url)
+            try:
+                url = self.link_field.get()
+                self.yt = YouTube(url)
+            except URLError as er:
+                print("Erro ao real obter informações da url.", er)
             if self.type_combobox.get() == "MP3":
                 try:
                     self.available_streams = self.yt.streams.filter(only_audio=True, file_extension='mp3')
@@ -128,6 +137,12 @@ class YoutubeDownloader(tk.CTk):
             stream.download(self.parts[0], self.parts[1])
         except BaseException as er:
             print("Exception realizar download.", er)
+        ttk.messagebox.showinfo("Download complete", "The video has been downloaded successfully!")
+
+
+
+
+
 
 app = YoutubeDownloader()
 #app.run()
