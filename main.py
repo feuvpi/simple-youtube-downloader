@@ -7,6 +7,7 @@ import re
 from pytube import YouTube
 from sys import argv
 from urllib.error import URLError
+
 tk.set_appearance_mode("dark")
 tk.set_default_color_theme("dark-blue")
 
@@ -16,6 +17,7 @@ app.title("Simple YouTube Downloader")
 
 widgets = []
 
+
 # adicionar tratamento de erros
 # adicionar progress bar
 # adicionar dialog para escolhar de local de salvamento
@@ -23,14 +25,13 @@ widgets = []
 
 
 class YoutubeDownloader(tk.CTk):
-
     # declare global variables
     yt = ''
     save_path = ''
 
     def __init__(self):
         super().__init__()
-        #tk.CTk.__init__(self)
+        # tk.CTk.__init__(self)
         self.quality_label = None
         self.type_combobox = None
         self.link_field = None
@@ -55,7 +56,6 @@ class YoutubeDownloader(tk.CTk):
         url_label = tk.CTkLabel(master=self, pady=10, padx=2, text="Youtube Downloader", font=("Roboto", 24))
         url_label.pack(pady=(10), padx=2)
 
-
         # create text field for input link
         self.link_field = tk.CTkEntry(master=self, width=400, placeholder_text="Enter video url:")
         self.link_field.pack(pady=2, padx=2)
@@ -63,10 +63,10 @@ class YoutubeDownloader(tk.CTk):
         widgets.append(self.link_field)
 
         # create label for file type
-        self.type_label = tk.CTkLabel(master=self, width=400, text="Choose file type:", font=("Roboto", 14), anchor=tk.W)
+        self.type_label = tk.CTkLabel(master=self, width=400, text="Choose file type:", font=("Roboto", 14),
+                                      anchor=tk.W)
         self.type_label.pack(pady=(10, 2), padx=2)
         widgets.append(self.type_label)
-
 
         # create combobox for type
 
@@ -75,8 +75,9 @@ class YoutubeDownloader(tk.CTk):
         widgets.append(self.type_combobox)
 
         # create label for quality
-        self.quality_label = tk.CTkLabel(master=self, width=400, text="Select quality:", font=("Roboto", 14), anchor=tk.W)
-        self.quality_label.pack(pady=(10,2), padx=10)
+        self.quality_label = tk.CTkLabel(master=self, width=400, text="Select quality:", font=("Roboto", 14),
+                                         anchor=tk.W)
+        self.quality_label.pack(pady=(10, 2), padx=10)
         widgets.append(self.quality_label)
 
         # create combobox for quality
@@ -87,12 +88,11 @@ class YoutubeDownloader(tk.CTk):
 
         # adding download button
         button = tk.CTkButton(master=self, width=400, text="Download", command=self.download)
-        button.pack(pady=(40,10), padx=10)
+        button.pack(pady=(40, 10), padx=10)
         widgets.append(button)
 
         # add a progress bar
         self.progress_bar = tkinter.ttk.Progressbar(self, orient='horizontal', length=200, mode='determinate')
-
 
     def combobox_fill(self, event):
         if len(event.widget.get()) > 32 and self.is_youtube_link(event.widget.get()):
@@ -103,7 +103,7 @@ class YoutubeDownloader(tk.CTk):
             # self.progress_bar.pack()
             try:
                 url = self.link_field.get()
-                self.yt = YouTube(url)
+                self.yt = YouTube(url, on_progress_callback=self.progress_function)
             except URLError as er:
                 print("Erro ao real obter informações da url.", er)
             if self.type_combobox.get() == "MP3":
@@ -123,14 +123,15 @@ class YoutubeDownloader(tk.CTk):
             teste = 1
             self.quality_combobox.configure(values=combo_values_filtered)
 
+    def progress_function(self, stream, chunk, file_handle, bytes_remaining):
+                self.progress_bar['value'] = stream.filesize - bytes_remaining
+                self.progress_bar.update()
+
 
     def download(self):
-
         for widget in widgets:
             widget.pack_forget()
-
         self.progress_bar.pack()
-
         # select save path
         if self.type_combobox.get() == "MP3":
             try:
@@ -143,17 +144,20 @@ class YoutubeDownloader(tk.CTk):
             except BaseException as er:
                 print("Exception ao selecionar savepath mp4.", er)
         self.parts = self.save_path.rsplit('/', 1)
-
         # proceed to download file
         try:
             if self.yt == '':
                 url = self.link_field.get()
-                self.yt = YouTube(url)
+                self.yt = YouTube(url, on_progress_callback=self.progress_function)
             quality = self.quality_combobox.get()
             if self.type_combobox.get() == "MP3":
                 stream = self.yt.streams.filter(only_audio=True, file_extension='mp3', abr=quality).first()
             else:
                 stream = self.yt.streams.filter(file_extension='mp4', resolution=quality).first()
+            self.progress_bar['maximum'] = stream.filesize
+
+            stream = self.yt.streams.get_by_resolution(quality)
+            stream.on_progress()
             stream.download(self.parts[0], self.parts[1])
         except BaseException as er:
             print("Exception realizar download.", er)
@@ -161,10 +165,6 @@ class YoutubeDownloader(tk.CTk):
         for widget in widgets:
             widget.pack()
         ttk.messagebox.showinfo("Download complete", "The video has been downloaded successfully!")
-
-
-
-
 
 
 app = YoutubeDownloader()
