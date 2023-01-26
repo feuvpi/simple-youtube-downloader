@@ -92,7 +92,7 @@ class YoutubeDownloader(tk.CTk):
         widgets.append(button)
 
         # add a progress bar
-        self.progress_bar = tkinter.ttk.Progressbar(self, orient='horizontal', length=200, mode='determinate')
+        self.progress_bar = tkinter.ttk.Progressbar(self, orient='horizontal', length=400, mode='indeterminate')
 
     def combobox_fill(self, event):
         if len(event.widget.get()) > 32 and self.is_youtube_link(event.widget.get()):
@@ -124,8 +124,8 @@ class YoutubeDownloader(tk.CTk):
             self.quality_combobox.configure(values=combo_values_filtered)
 
     def progress_function(self, stream, chunk, file_handle, bytes_remaining):
-                self.progress_bar['value'] = stream.filesize - bytes_remaining
-                self.progress_bar.update()
+        self.progress_bar['value'] = self.stream.filesize - bytes_remaining
+        self.progress_bar.update()
 
 
     def download(self):
@@ -151,14 +151,13 @@ class YoutubeDownloader(tk.CTk):
                 self.yt = YouTube(url, on_progress_callback=self.progress_function)
             quality = self.quality_combobox.get()
             if self.type_combobox.get() == "MP3":
-                stream = self.yt.streams.filter(only_audio=True, file_extension='mp3', abr=quality).first()
+                self.stream = self.yt.streams.filter(only_audio=True, file_extension='mp3', abr=quality).first()
             else:
-                stream = self.yt.streams.filter(file_extension='mp4', resolution=quality).first()
+                self.stream = self.yt.streams.filter(file_extension='mp4', resolution=quality).first()
             self.progress_bar['maximum'] = stream.filesize
 
-            stream = self.yt.streams.get_by_resolution(quality)
-            stream.on_progress()
-            stream.download(self.parts[0], self.parts[1])
+            self.stream = self.yt.streams.get_by_resolution(quality)
+            self.stream.download(self.parts[0], self.parts[1])
         except BaseException as er:
             print("Exception realizar download.", er)
         self.progress_bar.pack_forget()
