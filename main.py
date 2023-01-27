@@ -1,3 +1,5 @@
+import threading
+import time
 import tkinter as ttk
 import tkinter.ttk
 import customtkinter as tk
@@ -31,7 +33,7 @@ class YoutubeDownloader(tk.CTk):
 
     def __init__(self):
         super().__init__()
-        # tk.CTk.__init__(self)
+        self.progress_bar = tkinter.ttk.Progressbar(self, orient='horizontal', length=400, mode='indeterminate')
         self.quality_label = None
         self.type_combobox = None
         self.link_field = None
@@ -59,7 +61,7 @@ class YoutubeDownloader(tk.CTk):
         # create text field for input link
         self.link_field = tk.CTkEntry(master=self, width=400, placeholder_text="Enter video url:")
         self.link_field.pack(pady=2, padx=2)
-        self.link_field.bind("<KeyRelease>", self.combobox_fill)
+        self.link_field.bind("<FocusOut>", self.combobox_fill)
         widgets.append(self.link_field)
 
         # create label for file type
@@ -97,31 +99,40 @@ class YoutubeDownloader(tk.CTk):
     def combobox_fill(self, event):
         if len(event.widget.get()) > 32 and self.is_youtube_link(event.widget.get()):
 
-            # for widget in widgets:
-            #     widget.pack_forget()
-            #
-            # self.progress_bar.pack()
-            try:
-                url = self.link_field.get()
-                self.yt = YouTube(url, on_progress_callback=self.progress_function)
-            except URLError as er:
-                print("Erro ao real obter informações da url.", er)
+            # set-up indeterminate progress bar
+            for widget in widgets:
+                widget.pack_forget()
+            self.progress_bar.pack()
+            self.progress_bar.start()
+            self.progress_bar.place(relx=0.5, rely=0.5, anchor='center')
+            threading.Thread(target=self.get_data).start()
+
+
+
+
+
+    def get_data(self):
+        # request available streams based on type choosed
+        try:
+            url = self.link_field.get()
+            self.yt = YouTube(url)
             if self.type_combobox.get() == "MP3":
-                try:
-                    self.available_streams = self.yt.streams.filter(only_audio=True, file_extension='mp3')
-                    # combo_values = [i.abr for i in self.available_streams.fmt_streams]
-                except URLError as er:
-                    print("Erro ao tentar obter streams mp4 disponveis.", er)
+                self.available_streams = self.yt.streams.filter(only_audio=True, file_extension='mp3')
             else:
-                try:
-                    self.available_streams = self.yt.streams.filter(file_extension='mp4')
-                except URLError as er:
-                    print("Erro ao tentar obter streams mp4 disponveis.", er)
-            #  comboValues = [i.abr for i in self.available_streams.fmt_streams]
-            combo_values = [i.resolution for i in self.available_streams.fmt_streams]
-            combo_values_filtered = list(set(i for i in combo_values if i is not None))
-            teste = 1
-            self.quality_combobox.configure(values=combo_values_filtered)
+                self.available_streams = self.yt.streams.filter(file_extension='mp4')
+        except URLError as er:
+            print("Erro ao tentar obter streams mp4 disponveis.", er)
+
+        # filter response and load combobox
+        combo_values = [i.resolution for i in self.available_streams.fmt_streams]
+        combo_values_filtered = list(set(i for i in combo_values if i is not None))
+        self.quality_combobox.configure(values=combo_values_filtered)
+
+        # destroy and replace progress bar
+        self.progress_bar.stop()
+        self.progress_bar.destroy()
+        for widget in widgets:
+            widget.pack()
 
     def progress_function(self, stream, chunk, file_handle, bytes_remaining):
         self.progress_bar['value'] = self.stream.filesize - bytes_remaining
