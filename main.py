@@ -56,7 +56,7 @@ class YoutubeDownloader(tk.CTk):
 
         # create label for the url
         url_label = tk.CTkLabel(master=self, pady=10, padx=2, text="Youtube Downloader", font=("Roboto", 24))
-        url_label.pack(pady=(10), padx=2)
+        url_label.pack(pady=10, padx=2)
 
         # create text field for input link
         self.link_field = tk.CTkEntry(master=self, width=400, placeholder_text="Enter video url:")
@@ -79,19 +79,19 @@ class YoutubeDownloader(tk.CTk):
         # create label for quality
         self.quality_label = tk.CTkLabel(master=self, width=400, text="Select quality:", font=("Roboto", 14),
                                          anchor=tk.W)
-        self.quality_label.pack(pady=(10, 2), padx=10)
+        # self.quality_label.pack(pady=(10, 2), padx=10)
         widgets.append(self.quality_label)
 
         # create combobox for quality
 
         self.quality_combobox = tk.CTkComboBox(master=self, width=400, values=['Choose file type first'])
-        self.quality_combobox.pack(pady=2, padx=2)
+        # self.quality_combobox.pack(pady=2, padx=2)
         widgets.append(self.quality_combobox)
 
         # adding download button
-        button = tk.CTkButton(master=self, width=400, text="Download", command=self.download)
-        button.pack(pady=(40, 10), padx=10)
-        widgets.append(button)
+        self.button = tk.CTkButton(master=self, width=400, text="Download", command=self.download)
+        # self.button.pack(pady=(40, 10), padx=10)
+        widgets.append(self.button)
 
         # add a progress bar
         self.progress_bar = tkinter.ttk.Progressbar(self, orient='horizontal', length=400, mode='indeterminate')
@@ -106,9 +106,6 @@ class YoutubeDownloader(tk.CTk):
             self.progress_bar.start()
             self.progress_bar.place(relx=0.5, rely=0.5, anchor='center')
             threading.Thread(target=self.get_data).start()
-
-
-
 
 
     def get_data(self):
@@ -129,10 +126,17 @@ class YoutubeDownloader(tk.CTk):
         self.quality_combobox.configure(values=combo_values_filtered)
 
         # destroy and replace progress bar
+        self.progress_bar.place_forget()
+        self.progress_bar.pack_forget()
+
         self.progress_bar.stop()
-        self.progress_bar.destroy()
+
         for widget in widgets:
-            widget.pack()
+            if widget == self.button:
+                widget.pack(pady=(40, 10), padx=10)
+            if widget == self.quality_combobox or self.quality_label:
+                widget.pack(pady=2, padx=2)
+
 
     def progress_function(self, stream, chunk, file_handle, bytes_remaining):
         self.progress_bar['value'] = self.stream.filesize - bytes_remaining
@@ -173,7 +177,10 @@ class YoutubeDownloader(tk.CTk):
             print("Exception realizar download.", er)
         self.progress_bar.pack_forget()
         for widget in widgets:
-            widget.pack()
+            if widget == self.button:
+                widget.pack(pady=(40, 10), padx=10)
+            else:
+                widget.pack(pady=2, padx=2)
         ttk.messagebox.showinfo("Download complete", "The video has been downloaded successfully!")
 
 
