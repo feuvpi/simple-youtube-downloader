@@ -33,6 +33,7 @@ class YoutubeDownloader(tk.CTk):
 
     def __init__(self):
         super().__init__()
+        self.audiovar = None
         self.progress_bar = tkinter.ttk.Progressbar(self, orient='horizontal', length=400, mode='indeterminate')
         self.quality_label = None
         self.type_combobox = None
@@ -56,29 +57,44 @@ class YoutubeDownloader(tk.CTk):
 
         # create label for the url
         url_label = tk.CTkLabel(master=self, pady=10, padx=2, text="Youtube Downloader", font=("Roboto", 24))
-        url_label.pack(pady=10, padx=2)
+        url_label.pack(pady=20, padx=2)
 
         # create text field for input link
         self.link_field = tk.CTkEntry(master=self, width=400, placeholder_text="Enter video url:")
-        self.link_field.pack(pady=2, padx=2)
-        self.link_field.bind("<FocusOut>", self.combobox_fill)
+        self.link_field.pack(pady=(40, 5), padx=2)
+        self.link_field.bind("<KeyRelease>", self.combobox_fill)
         widgets.append(self.link_field)
 
         # create label for file type
-        self.type_label = tk.CTkLabel(master=self, width=400, text="Choose file type:", font=("Roboto", 14),
-                                      anchor=tk.W)
-        self.type_label.pack(pady=(10, 2), padx=2)
-        widgets.append(self.type_label)
+        # self.type_label = tk.CTkLabel(master=self, width=400, text="Choose file type:", font=("Roboto", 14),
+        #                               anchor=tk.W)
+        # self.type_label.pack(pady=(10, 2), padx=2)
+        # widgets.append(self.type_label)
 
         # create combobox for type
 
-        self.type_combobox = tk.CTkComboBox(master=self, width=400, values=["MP4", "MP3"])
-        self.type_combobox.pack(pady=2, padx=2)
-        widgets.append(self.type_combobox)
+        # self.type_combobox = tk.CTkComboBox(master=self, width=400, values=["MP4", "MP3"])
+        # self.type_combobox.pack(pady=2, padx=2)
+        # widgets.append(self.type_combobox)
 
-        # create label for quality
-        self.quality_label = tk.CTkLabel(master=self, width=400, text="Select quality:", font=("Roboto", 14),
-                                         anchor=tk.W)
+        self.frame = tk.CTkFrame(master=self)
+        self.frame.pack(pady=10, padx=2)
+        widgets.append(self.frame)
+
+        self.audiovar = tk.StringVar()
+        self.audiovar.set('audio')
+        self.audio_checkbox = tk.CTkCheckBox(master=self.frame, variable=self.audiovar, text="Audio", onvalue="audio", offvalue="")
+        self.audio_checkbox.pack(side="left", anchor="w", padx=2)
+        # widgets.append(self.audio_checkbox)
+
+        self.video_checkbox = tk.CTkCheckBox(master=self.frame, text="Video", onvalue="video", offvalue="")
+        self.video_checkbox.pack(side="left", anchor="w", padx=2)
+        # widgets.append(self.video_checkbox)
+
+
+        # # create label for quality
+        # self.quality_label = tk.CTkLabel(master=self, width=400, text="Select quality:", font=("Roboto", 14),
+        #                                  anchor=tk.W)
         # self.quality_label.pack(pady=(10, 2), padx=10)
         widgets.append(self.quality_label)
 
@@ -113,7 +129,7 @@ class YoutubeDownloader(tk.CTk):
         try:
             url = self.link_field.get()
             self.yt = YouTube(url)
-            if self.type_combobox.get() == "MP3":
+            if self.audio_checkbox.get() == "audio":
                 self.available_streams = self.yt.streams.filter(only_audio=True, file_extension='mp3')
             else:
                 self.available_streams = self.yt.streams.filter(file_extension='mp4')
@@ -148,11 +164,11 @@ class YoutubeDownloader(tk.CTk):
             widget.pack_forget()
         self.progress_bar.pack()
         # select save path
-        if self.type_combobox.get() == "MP3":
+        if self.audio_checkbox.get() == "audio":
             try:
                 self.save_path = filedialog.asksaveasfilename(defaultextension="mp3")
             except BaseException as ex:
-                print("Exception ao selecionar savepath mp3.", er)
+                print("Exception ao selecionar savepath mp3.", ex)
         else:
             try:
                 self.save_path = filedialog.asksaveasfilename(defaultextension="mp4")
@@ -165,12 +181,11 @@ class YoutubeDownloader(tk.CTk):
                 url = self.link_field.get()
                 self.yt = YouTube(url, on_progress_callback=self.progress_function)
             quality = self.quality_combobox.get()
-            if self.type_combobox.get() == "MP3":
+            if self.audio_checkbox.get() == "audio":
                 self.stream = self.yt.streams.filter(only_audio=True, file_extension='mp3', abr=quality).first()
             else:
                 self.stream = self.yt.streams.filter(file_extension='mp4', resolution=quality).first()
-            self.progress_bar['maximum'] = stream.filesize
-
+            self.progress_bar['maximum'] = self.stream.filesize
             self.stream = self.yt.streams.get_by_resolution(quality)
             self.stream.download(self.parts[0], self.parts[1])
         except BaseException as er:
