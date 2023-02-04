@@ -70,21 +70,21 @@ class YoutubeDownloader(tk.CTk):
         self.audio_checkbox = tk.CTkCheckBox(master=self.frame, variable=self.audiovar, text="Audio", onvalue="audio", offvalue="")
         self.audio_checkbox.bind("<ButtonRelease-1>", self.update_videocheckbox)
         self.audio_checkbox.pack(side="left", anchor="w", padx=2)
-        # widgets.append(self.audio_checkbox)
+
 
         self.videovar = tk.StringVar()
         self.video_checkbox = tk.CTkCheckBox(master=self.frame, variable=self.videovar, text="Video", onvalue="video", offvalue="")
         self.video_checkbox.bind("<ButtonRelease-1>", self.update_audiocheckbox)
         self.video_checkbox.pack(side="left", anchor="w", padx=2)
-        # widgets.append(self.video_checkbox)
+
 
         self.quality_combobox = tk.CTkComboBox(master=self, width=400, values=['Choose file type first'])
-        # self.quality_combobox.pack(pady=2, padx=2)
+
         widgets.append(self.quality_combobox)
 
         # adding download button
         self.button = tk.CTkButton(master=self, width=400, text="Download", command=self.download)
-        # self.button.pack(pady=(40, 10), padx=10)
+
         widgets.append(self.button)
 
         # add a progress bar
