@@ -19,11 +19,7 @@ app.title("Simple YouTube Downloader")
 
 widgets = []
 
-
-# adicionar tratamento de erros
-# adicionar progress bar
-# adicionar dialog para escolhar de local de salvamento
-# adicionar novas telas para cada etapa
+# dividir o app em pastas e estruturar melhor
 
 
 class YoutubeDownloader(tk.CTk):
@@ -65,18 +61,6 @@ class YoutubeDownloader(tk.CTk):
         self.link_field.bind("<KeyRelease>", self.combobox_fill)
         widgets.append(self.link_field)
 
-        # create label for file type
-        # self.type_label = tk.CTkLabel(master=self, width=400, text="Choose file type:", font=("Roboto", 14),
-        #                               anchor=tk.W)
-        # self.type_label.pack(pady=(10, 2), padx=2)
-        # widgets.append(self.type_label)
-
-        # create combobox for type
-
-        # self.type_combobox = tk.CTkComboBox(master=self, width=400, values=["MP4", "MP3"])
-        # self.type_combobox.pack(pady=2, padx=2)
-        # widgets.append(self.type_combobox)
-
         self.frame = tk.CTkFrame(master=self)
         self.frame.pack(pady=10, padx=2)
         widgets.append(self.frame)
@@ -84,21 +68,15 @@ class YoutubeDownloader(tk.CTk):
         self.audiovar = tk.StringVar()
         self.audiovar.set('audio')
         self.audio_checkbox = tk.CTkCheckBox(master=self.frame, variable=self.audiovar, text="Audio", onvalue="audio", offvalue="")
+        self.audio_checkbox.bind("<ButtonRelease-1>", self.update_videocheckbox)
         self.audio_checkbox.pack(side="left", anchor="w", padx=2)
         # widgets.append(self.audio_checkbox)
 
-        self.video_checkbox = tk.CTkCheckBox(master=self.frame, text="Video", onvalue="video", offvalue="")
+        self.videovar = tk.StringVar()
+        self.video_checkbox = tk.CTkCheckBox(master=self.frame, variable=self.videovar, text="Video", onvalue="video", offvalue="")
+        self.video_checkbox.bind("<ButtonRelease-1>", self.update_audiocheckbox)
         self.video_checkbox.pack(side="left", anchor="w", padx=2)
         # widgets.append(self.video_checkbox)
-
-
-        # # create label for quality
-        # self.quality_label = tk.CTkLabel(master=self, width=400, text="Select quality:", font=("Roboto", 14),
-        #                                  anchor=tk.W)
-        # self.quality_label.pack(pady=(10, 2), padx=10)
-        widgets.append(self.quality_label)
-
-        # create combobox for quality
 
         self.quality_combobox = tk.CTkComboBox(master=self, width=400, values=['Choose file type first'])
         # self.quality_combobox.pack(pady=2, padx=2)
@@ -111,6 +89,14 @@ class YoutubeDownloader(tk.CTk):
 
         # add a progress bar
         self.progress_bar = tkinter.ttk.Progressbar(self, orient='horizontal', length=400, mode='indeterminate')
+
+    def update_videocheckbox(self, event):
+        self.videovar.set('')
+
+
+    def update_audiocheckbox(self, event):
+        self.audiovar.set('')
+
 
     def combobox_fill(self, event):
         if len(event.widget.get()) > 32 and self.is_youtube_link(event.widget.get()):
@@ -129,7 +115,7 @@ class YoutubeDownloader(tk.CTk):
         try:
             url = self.link_field.get()
             self.yt = YouTube(url)
-            if self.audio_checkbox.get() == "audio":
+            if self.audiovar == "audio":
                 self.available_streams = self.yt.streams.filter(only_audio=True, file_extension='mp3')
             else:
                 self.available_streams = self.yt.streams.filter(file_extension='mp4')
